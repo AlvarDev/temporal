@@ -1,21 +1,74 @@
 apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.3"
     defaultConfig {
         applicationId "com.alvardev.android.myapplication"
         minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 24
+        versionCode 7 // ***
+        versionName "1.0.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/LICENSE-FIREBASE_jvm.txt'
+    }
+
+
+    splits {
+        density {
+            enable true
+            reset()
+            include "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"
+        }
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8", "x86", "x86_64"
+        }
+    }
+
+
+}
+
+ext.densityCodes = ['mdpi': 11, 'hdpi': 12, 'xhdpi': 13, 'xxhdpi': 14, 'xxxhdpi': 15] // ##
+ext.abiCodes = ['armeabi-v7a':21, x86:22, x86_64:23, 'arm64-v8':24] // --
+
+import com.android.build.OutputFile
+
+android.applicationVariants.all { variant ->
+
+    variant.outputs.each { output ->
+
+        def baseDenVersionCode = project.ext.densityCodes.get(output.getFilter(OutputFile.DENSITY))
+        def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
+
+        if (baseAbiVersionCode != null && baseDenVersionCode != null) {
+            //versionCode = ##--***
+            output.versionCodeOverride = baseDenVersionCode * 100000 + variant.versionCode + baseAbiVersionCode * 1000
+        }
+    }
+}
+
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://jitpack.io"
     }
 }
 
@@ -24,6 +77,25 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.0.1'
+
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
+    compile 'com.appboy:android-sdk-ui:1.14.+'
+    compile 'com.facebook.android:facebook-android-sdk:4.16.1'
+    compile 'com.google.code.gson:gson:2.7'
+    compile 'com.google.guava:guava:19.0'
+    compile 'com.google.firebase:firebase-messaging:9.8.0'
+    compile 'com.google.android.gms:play-services-location:9.8.0'
+    compile 'com.jakewharton:butterknife:8.4.0'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    compile 'io.card:android-sdk:5.4.2'
+    compile 'me.relex:circleindicator:1.2.2@aar'
+    compile 'pub.devrel:easypermissions:0.2.1'
+
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
     testCompile 'junit:junit:4.12'
+
 }
+apply plugin: 'com.google.gms.google-services'
